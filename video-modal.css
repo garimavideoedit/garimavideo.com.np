@@ -1,0 +1,63 @@
+.local-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.play-button {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 61, 0, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: #fff;
+    padding-left: 8px;
+}
+
+.website-preview {
+    width: 300%;
+    height: 300%;
+    border: none;
+    pointer-events: none;
+    transform: scale(0.33);
+    transform-origin: top left;
+}
+
+.website-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.portfolio-item:hover .website-overlay {
+    opacity: 1;
+}
+
+.visit-icon {
+    background: rgba(255, 61, 0, 0.9);
+    color: #fff;
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+}

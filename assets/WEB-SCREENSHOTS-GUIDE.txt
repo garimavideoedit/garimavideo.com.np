@@ -1,0 +1,50 @@
+WEBSITE SCREENSHOTS GUIDE
+=========================
+
+YOUR WEBSITES:
+--------------
+1. https://globalnepalihub.com/
+2. https://jayaphotostudio.vercel.app/
+3. https://readdy.link/preview/74d4fbf2-8378-4adf-baee-b2a82cc8a177/2251046
+4. https://readdy.link/preview/fab41200-e5dc-4c52-a2a4-f1c1cce262ef/3075061
+
+HOW TO TAKE SCREENSHOTS:
+-------------------------
+
+METHOD 1: Manual Screenshot
+1. Open each website in browser
+2. Press Win+Shift+S (Windows) or Cmd+Shift+4 (Mac)
+3. Select full page
+4. Save screenshot
+
+METHOD 2: Online Tool (Easiest)
+1. Go to: https://www.screenshotmachine.com/
+2. Paste website URL
+3. Click "Capture Screenshot"
+4. Download image
+
+METHOD 3: Browser Extension
+1. Install "Full Page Screen Capture" extension
+2. Open website
+3. Click extension icon
+4. Download screenshot
+
+SAVE SCREENSHOTS AS:
+--------------------
+- web1.jpg (Global Nepali Hub)
+- web2.jpg (Jaya Photo Studio)
+- web3.jpg (Portfolio 1)
+- web4.jpg (Portfolio 2)
+
+SAVE TO: f:\my website\My New Website\assets\
+
+AFTER SAVING:
+-------------
+Screenshots automatically dekhine chha Web Design category ma!
+
+RECOMMENDED SIZE:
+-----------------
+- Width: 1200px
+- Height: 800px
+- Format: JPG
+- Quality: 80%

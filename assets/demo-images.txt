@@ -1,0 +1,17 @@
+Demo Images Needed:
+
+1. hero-video.mp4 - Background video for hero section (1920x1080, 10-30 seconds)
+2. portfolio1.jpg - Video editing project showcase (800x600)
+3. portfolio2.jpg - Photography project showcase (800x600) 
+4. portfolio3.jpg - Web design project showcase (800x600)
+5. about-image.jpg - Team or studio photo (600x400)
+
+You can replace these with your actual project images and videos.
+
+For demo purposes, you can use:
+- Unsplash.com for high-quality photos
+- Pexels.com for free stock videos
+- Your own portfolio work
+
+Recommended image formats: JPG, PNG, WebP
+Recommended video formats: MP4, WebM

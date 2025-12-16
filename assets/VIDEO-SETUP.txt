@@ -1,0 +1,68 @@
+VIDEO SETUP INSTRUCTIONS
+========================
+
+STEP 1: Download Videos from YouTube Channel
+---------------------------------------------
+Go to: https://www.youtube.com/@AnimalAffectionNation
+
+Use any of these methods to download:
+1. Online Tools:
+   - https://ytmp3.nu/
+   - https://y2mate.com/
+   - https://savefrom.net/
+
+2. Software:
+   - 4K Video Downloader
+   - YTD Video Downloader
+   - Free YouTube Download
+
+STEP 2: Prepare Videos
+-----------------------
+- Download 6 videos from the channel
+- Convert to MP4 format (if needed)
+- Recommended resolution: 1920x1080 (Full HD)
+- Keep file size reasonable (under 50MB each)
+
+STEP 3: Rename and Save
+------------------------
+Rename downloaded videos to:
+- video1.mp4
+- video2.mp4
+- video3.mp4
+- video4.mp4
+- video5.mp4
+- video6.mp4
+
+Save all videos in this folder: assets/
+
+STEP 4: Test Website
+--------------------
+- Open index.html in browser
+- Videos will auto-play in background
+- Each video plays for 10 seconds then switches
+- Smooth fade transition between videos
+
+FEATURES:
+---------
+✓ Auto-play on page load
+✓ Muted (no sound)
+✓ Looping videos
+✓ Smooth fade transitions
+✓ 10 second rotation
+✓ 6 videos total
+
+TROUBLESHOOTING:
+----------------
+- If videos don't play: Check file names match exactly
+- If videos are too large: Compress using HandBrake or similar
+- If videos don't loop: Make sure they're in MP4 format
+- Browser compatibility: Works best in Chrome, Firefox, Edge
+
+ALTERNATIVE: Use Placeholder Videos
+------------------------------------
+If you don't have videos yet, you can use free stock videos from:
+- Pexels.com/videos
+- Pixabay.com/videos
+- Coverr.co
+
+Just download, rename, and place in assets folder!
