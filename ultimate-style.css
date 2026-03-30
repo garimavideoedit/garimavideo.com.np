@@ -1486,11 +1486,16 @@ body {
 }
 
 .custom-modal-overlay { 
-    position: fixed; 
-    inset: 0; 
-    background: rgba(0, 0, 0, 0.7); 
-    backdrop-filter: blur(8px); 
-    z-index: 100100; 
+    position: fixed !important; 
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: rgba(0, 0, 0, 0.8) !important; 
+    backdrop-filter: blur(10px) !important; 
+    z-index: 1100000 !important; 
     display: none; 
     align-items: center; 
     justify-content: center; 
@@ -1513,6 +1518,7 @@ body {
     font-size: 3.5rem; 
     background: linear-gradient(135deg, var(--primary), var(--secondary)); 
     -webkit-background-clip: text; 
+    background-clip: text;
     -webkit-text-fill-color: transparent; 
     margin-bottom: 25px; 
 }
@@ -1523,6 +1529,7 @@ body {
     margin-bottom: 15px; 
     background: linear-gradient(135deg, var(--light), #ccc); 
     -webkit-background-clip: text; 
+    background-clip: text;
     -webkit-text-fill-color: transparent; 
 }
 
