@@ -1,7 +1,7 @@
 // Photo Selection Logic - Google Drive Integration (Serverless via Google Apps Script)
 document.addEventListener('DOMContentLoaded', () => {
     // 🔗 GOOGLE APPS SCRIPT URL - PROVIDED BY USER
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwA4rNhzegZ0Vx6fOTGfVhlweS2J8ZHuktn4aKuE3uGs4ScuBg1ovw-cYkP25w8XoCbYA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbztQv0BxL_2BxvAKG12YVwrt8w0v4fWj6B9381MtJOKS9pL2RvPNdQIavjNXggWHuz5KA/exec";
     
     // UI Elements
     const authContainer = document.getElementById('selection-auth-container');
@@ -98,10 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function showAuth() {
         if (!authContainer) return;
         authContainer.style.display = 'block';
-        studioDashboard.style.display = 'none';
+        if (studioDashboard) studioDashboard.style.display = 'none';
         mainContainer.style.display = 'none';
         
-        // Setup simple "Admin" button
         const setupBtn = document.getElementById('google-login-btn');
         if (setupBtn) {
             setupBtn.innerHTML = `
@@ -133,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectionFooter.style.display = 'none';
     }
 
-    let allPhotos = []; // Keep track of all photos for lightbox navigation
+    let allPhotos = []; 
     let currentPhotoIndex = -1;
 
     // 3. Drive API Calls (via Google Apps Script URL)
@@ -147,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSelectedCount();
 
         try {
-            // Using GET for fetching photos
             const fetchUrl = `${SCRIPT_URL}?action=fetch&folderId=${folderId}`;
             console.log("Fetching from GAS:", fetchUrl);
             
@@ -168,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="preview-icon" title="Preview Full Screen">
                             <i class="fas fa-expand"></i>
                         </div>
-                        <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy">
+                        <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3342/3342137.png'">
                         <div class="selection-overlay">
                             <i class="fas fa-check-circle"></i>
                         </div>
@@ -219,8 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         lightboxImg.src = photo.thumbnail;
         lightboxCaption.textContent = 'Loading ' + photo.name + '...';
         
-        // Load high res (using Drive's thumbnail API for speed)
-        const highResUrl = photo.thumbnail.replace('=s220', '=s1024');
+        const highResUrl = photo.thumbnail.replace('=s400', '=s1600').replace('=s220', '=s1600');
         const tempImg = new Image();
         tempImg.src = highResUrl;
         tempImg.onload = () => {
@@ -267,7 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateLightboxSelectBtn();
     }
 
-    // Bind Controls
     document.querySelector('.lightbox-close')?.addEventListener('click', closeLightbox);
     document.getElementById('lightbox-prev')?.addEventListener('click', showPrev);
     document.getElementById('lightbox-next')?.addEventListener('click', showNext);
@@ -294,16 +290,10 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
             let successCount = 0;
-            let errorCount = 0;
-
             const selectedFilesArray = Array.from(selectedPhotos);
             
-            // Process one by one (JSON and fetch works best for individual copies in GAS)
             for (const fileId of selectedFilesArray) {
                 try {
-                    // Note: fetch with mode 'no-cors' works for sending but we can't see result.
-                    // For better results on GitHub Pages, we use a single POST call with the list
-                    // but for this simple script we'll just send individual markers.
                     await fetch(SCRIPT_URL, {
                         method: 'POST',
                         mode: 'no-cors', 
@@ -318,11 +308,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     successCount++;
                 } catch (err) {
                     console.error("Save error:", err);
-                    errorCount++;
                 }
             }
 
-            // Construct WhatsApp Message
             const waMessage = encodeURIComponent(`नमस्ते! मेरो फोटो सेलेक्सन पूर्ण भयो।\nनाम: ${clientName}\nजम्मा फोटो: ${successCount}\nकृपया चेक गर्नुहोला।`);
             const waUrl = `https://wa.me/9779852688256?text=${waMessage}`;
             
@@ -340,7 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Load Folder Logic
     if (loadFolderBtn && folderLinkInput) {
         loadFolderBtn.addEventListener('click', () => {
             const url = folderLinkInput.value.trim();
