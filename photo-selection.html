@@ -49,16 +49,13 @@
                 <div class="auth-welcome">
                     <i class="fas fa-images"></i>
                     <h3>Welcome to Photo Selection Portal</h3>
-                    <p>Log in with your Google account to start choosing your photos from shared albums.</p>
+                    <p>Select your favorite photos from your shared Google Drive albums.</p>
                     <div id="google-login-btn">
-                        <a href="/login" class="btn-google-login" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
-                            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google Logo">
-                            Sign in with Google Drive
-                        </a>
+                        <button id="btn-open-dashboard" class="btn-primary" onclick="document.getElementById('studio-dashboard').style.display='block'; document.getElementById('selection-auth-container').style.display='none';">
+                            <i class="fas fa-folder-open"></i> Start Selection
+                        </button>
                         <p style="margin-top: 15px; font-size: 0.85rem; opacity: 0.6;">
-                            Are you the Studio Owner? 
-                            <a href="/admin-login" style="color: var(--primary); text-decoration: underline;">Setup Admin Access</a> 
-                            to enable sharing links for customers.
+                            Note: Ensure your shared folder link is ready to load photos.
                         </p>
                     </div>
                 </div>
