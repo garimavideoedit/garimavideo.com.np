@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Selection - Garima Video Mixing & Editing</title>
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🎬</text></svg>">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1179/1179069.png" type="image/png">
+    <link rel="stylesheet" href="ultimate-style.css?v=2">
+    <link rel="stylesheet" href="chatbot-styles.css?v=2">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar scrolled">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-video"></i>
+                <span>Garima Video Mixing & Editing</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html#home">Home</a></li>
+                <li><a href="index.html#services">Services</a></li>
+                <li><a href="index.html#portfolio">Portfolio</a></li>
+                <li><a href="photo-selection.html" class="active">Photo Selection</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+            </ul>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Photo Selection Section -->
+    <section id="photo-selection" class="photo-selection" style="padding-top: 120px; min-height: 80vh;">
+        <div class="container">
+            <div class="section-header" style="text-align: center; margin-bottom: 40px;">
+                <h2>Photo Selection Portal</h2>
+                <p>Select your favorite photos from your shared Google Photos albums</p>
+            </div>
+
+            <div id="selection-auth-container" class="selection-card">
+                <div class="auth-welcome">
+                    <i class="fas fa-images"></i>
+                    <h3>Welcome to Photo Selection Portal</h3>
+                    <p>Log in with your Google account to start choosing your photos from shared albums.</p>
+                    <div id="google-login-btn">
+                        <a href="/login" class="btn-google-login" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+                            <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google Logo">
+                            Sign in with Google Drive
+                        </a>
+                        <p style="margin-top: 15px; font-size: 0.85rem; opacity: 0.6;">
+                            Are you the Studio Owner? 
+                            <a href="/admin-login" style="color: var(--primary); text-decoration: underline;">Setup Admin Access</a> 
+                            to enable sharing links for customers.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Studio Dashboard (Visible to Owner) -->
+            <div id="studio-dashboard" class="selection-card" style="display: none;">
+                <div class="user-header">
+                    <div class="user-profile">
+                        <img id="user-picture" src="" alt="Profile">
+                        <div class="user-info">
+                            <h4 id="user-name"></h4>
+                            <p id="user-email"></p>
+                        </div>
+                    </div>
+                    <button id="logout-btn" class="btn-outline">Logout</button>
+                </div>
+                <div class="dashboard-content">
+                    <h3>Studio Dashboard</h3>
+                    <p>Select an album to share with your client for selection.</p>
+                    <div id="album-list" class="album-grid">
+                        <div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading Albums...</div>
+                    </div>
+                </div>
+            </div>
+
+                <div id="selection-main-container" class="selection-card" style="display: none;">
+                <div id="client-view-header" style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h3 id="album-title" style="margin-bottom: 5px;">Google Drive Folder Selection</h3>
+                            <p id="album-info" style="color: rgba(255,255,255,0.6);">Paste your Google Drive folder link below to load photos.</p>
+                        </div>
+                        <div id="admin-tools" style="display: none; text-align: right;">
+                            <span id="admin-badge" class="badge">Admin Mode</span>
+                            <div id="persistent-token-status" style="margin-top: 5px;">
+                                <!-- Will be filled by JS: either a 'Persistent Access Active' message or a setup button -->
+                            </div>
+                            <button id="btn-copy-link" class="btn-outline" style="margin-top: 10px;">
+                                <i class="fas fa-link"></i> Copy Sharing Link
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="folder-link-input-container" id="admin-input-container" style="margin-top: 20px; display: none; gap: 10px;">
+                        <input type="text" id="folder-link-input" placeholder="Paste Google Drive Folder Link here..." style="flex: 1; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white;">
+                        <button id="btn-load-folder" class="btn-primary">Load Photos</button>
+                    </div>
+
+                    <div id="guest-welcome" style="display: none; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; border-left: 4px solid var(--primary);">
+                        <p style="margin: 0; font-weight: 500;">Welcome, <span id="display-client-name" style="color: var(--primary);">Guest</span>!</p>
+                        <p style="margin: 5px 0 0; font-size: 0.9rem; opacity: 0.7;">Please select your favorite photos below.</p>
+                    </div>
+
+                    <button id="btn-back-to-dashboard" class="btn-outline" style="display: none; margin-top: 10px;">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </button>
+                </div>
+
+                <div id="selection-grid-container" class="selection-grid-container">
+                    <div id="selection-grid" class="selection-grid">
+                        <!-- Photos will be loaded here -->
+                    </div>
+                </div>
+
+                <div id="selection-footer" class="selection-footer" style="display: none;">
+                    <div class="selected-status">Selected: <span id="selected-count">0</span> photos</div>
+                    <div class="footer-actions">
+                        <button id="submit-selection" class="btn-primary">
+                            <i class="fab fa-whatsapp"></i> Confirm & Send Selection
+                        </button>
+                        <button id="btn-save-to-google" class="btn-secondary" style="display: none;">
+                            <i class="fab fa-google"></i> Create Selection Album (Owner Only)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Garima Video Mixing & Editing</h3>
+                    <p>Transforming ideas into visual masterpieces through professional video editing, photography, and digital solutions.</p>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/dhunganahari1998" target="_blank"><i class="fab fa-facebook"></i></a>
+                        <a href="https://www.youtube.com/@AnimalAffectionNation" target="_blank"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="index.html#services">Video Mixing</a></li>
+                        <li><a href="index.html#services">Video Editing</a></li>
+                        <li><a href="index.html#services">Photography</a></li>
+                        <li><a href="index.html#services">Web Design</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Our Websites</h4>
+                    <ul>
+                        <li><a href="https://globalnepalihub.com/" target="_blank">Global Nepali Hub</a></li>
+                        <li><a href="https://jayaphotostudio.vercel.app/" target="_blank">Jaya Photo Studio</a></li>
+                        <li><a href="https://readdy.link/preview/74d4fbf2-8378-4adf-baee-b2a82cc8a177/2251046" target="_blank">Portfolio 1</a></li>
+                        <li><a href="https://readdy.link/preview/fab41200-e5dc-4c52-a2a4-f1c1cce262ef/3075061" target="_blank">Portfolio 2</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Garima Video Mixing & Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- WhatsApp Chat Widget -->
+    <div id="chatbot-container">
+        <div id="chatbot-toggle">
+            <i class="fab fa-whatsapp"></i>
+        </div>
+        <div id="chatbot-window">
+            <div class="chatbot-header">
+                <div>
+                    <h4>Chat with us</h4>
+                    <div class="chatbot-status">
+                        <div class="status-dot"></div>
+                        <span>Typically replies instantly</span>
+                    </div>
+                </div>
+                <button id="chatbot-close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="chatbot-messages" id="chatbot-messages">
+                <div class="bot-message">
+                    <p>Hello! 👋 Welcome to Garima Video Mixing & Editing.</p>
+                    <p>How can we help you today?</p>
+                </div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatbot-input" placeholder="Type your message...">
+                <button id="chatbot-send"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox-modal" class="lightbox-modal">
+        <span class="lightbox-close" title="Close / बन्द गर्नुहोस्">&times;</span>
+        <img class="lightbox-content" id="lightbox-img">
+        <div id="lightbox-caption"></div>
+        <div class="lightbox-nav">
+            <button id="lightbox-prev" class="lightbox-btn" title="Previous Photo / अघिल्लो फोटो"><i class="fas fa-chevron-left"></i></button>
+            <button id="lightbox-next" class="lightbox-btn" title="Next Photo / पछिल्लो फोटो"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="lightbox-controls-bottom">
+            <button id="lightbox-zoom-out" class="lightbox-btn" title="Zoom Out / सानो बनाउनुहोस्"><i class="fas fa-search-minus"></i></button>
+            <button id="lightbox-select" class="lightbox-btn lightbox-select-btn" title="Select Photo / फोटो रोज्नुहोस्">
+                <i class="fas fa-check-circle"></i>
+            </button>
+            <button id="lightbox-zoom-in" class="lightbox-btn" title="Zoom In / ठूलो बनाउनुहोस्"><i class="fas fa-search-plus"></i></button>
+        </div>
+    </div>
+
+    <!-- Guest Identity Modal -->
+    <div id="guest-modal" class="lightbox-modal" style="display: none; align-items: center; justify-content: center; backdrop-filter: blur(15px);">
+        <div class="selection-card" style="max-width: 450px; width: 90%; text-align: center; padding: 50px 30px;">
+            <i class="fas fa-user-circle" style="font-size: 4rem; color: var(--primary); margin-bottom: 20px;"></i>
+            <h3 style="font-size: 2rem; margin-bottom: 10px;">Welcome!</h3>
+            <p style="margin-bottom: 30px; opacity: 0.8;">Please enter your name to start selecting your photos.</p>
+            <input type="text" id="guest-name-input" placeholder="Enter Your Full Name" style="width: 100%; padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: white; font-size: 1.1rem; margin-bottom: 20px; text-align: center;">
+            <button id="btn-start-selection" class="btn-primary" style="width: 100%;">Start Selection Now</button>
+        </div>
+    </div>
+
+    <style>
+        .badge {
+            background: linear-gradient(135deg, #ff3d00, #ff8c00);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(255, 61, 0, 0.3);
+        }
+        #guest-modal {
+            display: none; /* Controlled by JS */
+            flex-direction: column;
+        }
+    </style>
+
+    <script src="script.js"></script>
+    <script src="photo-selection.js"></script>
+    <script src="chatbot-advanced.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+    "name": "garimavideo/photo-portal",
+    "description": "Google Drive integration for photo selection",
+    "require": {
+        "google/apiclient": "^2.15"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}

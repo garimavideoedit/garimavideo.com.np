@@ -64,6 +64,17 @@ function loadLocalVideos() {
             videoElement.currentTime = 0;
             playOverlay.style.opacity = '1';
         });
+
+        videoElement.addEventListener('dblclick', () => {
+            if (videoElement.requestFullscreen) {
+                videoElement.requestFullscreen();
+            } else if (videoElement.webkitRequestFullscreen) {
+                videoElement.webkitRequestFullscreen();
+            } else if (videoElement.msRequestFullscreen) {
+                videoElement.msRequestFullscreen();
+            }
+            videoElement.muted = false;
+        });
         
         portfolioGrid.appendChild(portfolioItem);
     });
