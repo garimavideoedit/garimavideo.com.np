@@ -18,6 +18,67 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFolderId = ''; 
     let clientName = 'Guest';
 
+    // --- Modern Notification System Helpers ---
+    
+    // 1. Toast Notification
+    window.showToast = function(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+        
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+        
+        const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+        
+        toast.innerHTML = `
+            <i class="fas ${icon}"></i>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Auto remove after 4s
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => {
+                if (toast.parentNode === container) container.removeChild(toast);
+            }, 300);
+        }, 3500);
+    };
+
+    // 2. Custom Confirm Modal
+    window.showConfirm = function(title, message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('custom-confirm-modal');
+            const titleEl = document.getElementById('modal-title');
+            const messageEl = document.getElementById('modal-message');
+            const confirmBtn = document.getElementById('modal-confirm');
+            const cancelBtn = document.getElementById('modal-cancel');
+            
+            if (!modal) {
+                resolve(confirm(message));
+                return;
+            }
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            modal.style.display = 'flex';
+            
+            const cleanup = (result) => {
+                modal.style.display = 'none';
+                confirmBtn.removeEventListener('click', onConfirm);
+                cancelBtn.removeEventListener('click', onCancel);
+                resolve(result);
+            };
+            
+            const onConfirm = () => cleanup(true);
+            const onCancel = () => cleanup(false);
+            
+            confirmBtn.addEventListener('click', onConfirm);
+            cancelBtn.addEventListener('click', onCancel);
+        });
+    };
+
     // --- JSONP HELPER FUNCTION (Bypasses CORS errors completely) ---
     function callGAS(params) {
         return new Promise((resolve, reject) => {
@@ -44,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 1. Initial State Check
+    // Initial State Check
     async function initSelection() {
         const urlParams = new URLSearchParams(window.location.search);
         const folderIdParam = urlParams.get('folderId');
@@ -80,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const folderIdParam = urlParams.get('folderId');
             if (folderIdParam) loadPhotos(folderIdParam);
         } else {
-            alert('Please enter your name.');
+            showToast('Please enter your name.', 'error');
         }
     });
 
@@ -93,11 +154,13 @@ document.addEventListener('DOMContentLoaded', () => {
             folderIdToShare = folderIdMatch ? folderIdMatch[1] : (url.length > 20 ? url : null);
         }
         if (!folderIdToShare) {
-            alert('Load a folder first!');
+            showToast('Load a folder first!', 'error');
             return;
         }
         const shareUrl = `${window.location.origin}${window.location.pathname}?folderId=${folderIdToShare}`;
-        navigator.clipboard.writeText(shareUrl).then(() => alert('Sharing link copied!'));
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            showToast('Sharing link copied to clipboard!');
+        });
     });
 
     // Navigation
@@ -131,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let allPhotos = []; 
     let currentPhotoIndex = -1;
 
-    // 3. Drive API Calls (via callGAS helper)
+    // Drive API Calls (via callGAS helper)
     async function loadPhotos(folderId) {
         if (!folderId) return;
         currentFolderId = folderId;
@@ -178,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 4. Lightbox Logic
+    // Lightbox Logic
     const lightboxModal = document.getElementById('lightbox-modal');
     const lightboxImg = document.getElementById('lightbox-img');
     const lightboxCaption = document.getElementById('lightbox-caption');
@@ -231,11 +294,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (selectedCount) selectedCount.textContent = selectedPhotos.size;
     }
 
-    // 5. Submit Selection (Using callGAS helper)
+    // Submit Selection (Using custom confirm modal)
     if (submitBtn) {
         submitBtn.addEventListener('click', async () => {
-            if (selectedPhotos.size === 0) return alert('Select some photos!');
-            if (!confirm(`Save ${selectedPhotos.size} photos?`)) return;
+            if (selectedPhotos.size === 0) {
+                showToast('Select some photos first!', 'error');
+                return;
+            }
+            
+            const confirmed = await showConfirm('Confirm Selection', `Add ${selectedPhotos.size} photos to your selection folder?`);
+            if (!confirmed) return;
 
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
@@ -256,17 +324,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const waMessage = encodeURIComponent(`नमस्ते! मेरो फोटो सेलेक्सन पूर्ण भयो।\nनाम: ${clientName}\nजम्मा फोटो: ${successCount}\nकृपया चेक गर्नुहोला।`);
-            window.open(`https://wa.me/9779852688256?text=${waMessage}`, '_blank');
             
-            alert(`Done! ${successCount} photos processed.`);
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Confirm & Send Selection';
-            
-            if (successCount > 0) {
-                selectedPhotos.clear();
-                updateSelectedCount();
-                document.querySelectorAll('.selection-item.selected').forEach(el => el.classList.remove('selected'));
-            }
+            showToast(`Selection Complete! ${successCount} photos saved.`, 'success');
+            setTimeout(() => {
+                window.open(`https://wa.me/9779852688256?text=${waMessage}`, '_blank');
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Confirm & Send Selection';
+                
+                if (successCount > 0) {
+                    selectedPhotos.clear();
+                    updateSelectedCount();
+                    document.querySelectorAll('.selection-item.selected').forEach(el => el.classList.remove('selected'));
+                }
+            }, 1000);
         });
     }
 
@@ -276,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const folderIdMatch = url.match(/\/folders\/([a-zA-Z0-9-_]+)/);
             const folderId = folderIdMatch ? folderIdMatch[1] : (url.length > 20 ? url : null);
             if (folderId) loadPhotos(folderId);
-            else alert('Invalid link!');
+            else showToast('Invalid folder link!', 'error');
         });
     }
 
