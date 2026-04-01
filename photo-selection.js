@@ -1,7 +1,7 @@
 // Photo Selection Logic - Google Drive Integration (Serverless JSONP via Google Apps Script)
 document.addEventListener('DOMContentLoaded', () => {
     // 🔗 FINAL JSONP GOOGLE APPS SCRIPT URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1ZtuH4tNpVcqWhH2Y45fG9t5Ymiw4ddj4LFZVDV-8y83hbbQTLO-LnQyFRPHW1O1oWA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdSXKlaa5ZX09XAtG8f5uJ1i9YbIfuL0MTSKTjY1lQquufC499Te2SmmYgc32g5jd3JA/exec";
     
     // UI Elements
     const authContainer = document.getElementById('selection-auth-container');
