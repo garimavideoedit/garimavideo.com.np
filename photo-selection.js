@@ -301,36 +301,41 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-            let successCount = 0;
-            const selectedFilesArray = Array.from(selectedPhotos);
+            const selectedFilesJoined = Array.from(selectedPhotos).join(',');
             
-            for (const fileId of selectedFilesArray) {
-                try {
-                    const res = await callGAS({ 
-                        action: 'addSelection', 
-                        fileId: fileId, 
-                        parentFolderId: currentFolderId, 
-                        customerName: clientName 
-                    });
-                    if (res.success) successCount++;
-                } catch (err) { console.error("Save error:", err); }
-            }
+            try {
+                // Single Batch Request for all files
+                const res = await callGAS({ 
+                    action: 'batchAddSelection', 
+                    fileIds: selectedFilesJoined, 
+                    parentFolderId: currentFolderId, 
+                    customerName: clientName 
+                });
 
-            const waMessage = encodeURIComponent(`नमस्ते! मेरो फोटो सेलेक्सन पूर्ण भयो।\nनाम: ${clientName}\nजम्मा फोटो: ${successCount}\nकृपया चेक गर्नुहोला।`);
-            
-            showToast(`Selection Complete! ${successCount} photos saved.`, 'success');
-            setTimeout(() => {
-                window.open(`https://wa.me/9779852688256?text=${waMessage}`, '_blank');
-                
+                if (res.success) {
+                    const successCount = res.count || selectedPhotos.size;
+                    const waMessage = encodeURIComponent(`नमस्ते! मेरो फोटो सेलेक्सन पूर्ण भयो।\nनाम: ${clientName}\nजम्मा फोटो: ${successCount}\nकृपया चेक गर्नुहोला।`);
+                    
+                    showToast(`Selection Complete! ${successCount} photos saved.`, 'success');
+                    
+                    setTimeout(() => {
+                        window.open(`https://wa.me/9779852688256?text=${waMessage}`, '_blank');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Confirm & Send Selection';
+                        
+                        selectedPhotos.clear();
+                        updateSelectedCount();
+                        document.querySelectorAll('.selection-item.selected').forEach(el => el.classList.remove('selected'));
+                    }, 1000);
+                } else {
+                    throw new Error(res.error || 'Failed to save selection.');
+                }
+            } catch (err) {
+                console.error("Save error:", err);
+                showToast(`Error: ${err.message}`, 'error');
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Confirm & Send Selection';
-                
-                if (successCount > 0) {
-                    selectedPhotos.clear();
-                    updateSelectedCount();
-                    document.querySelectorAll('.selection-item.selected').forEach(el => el.classList.remove('selected'));
-                }
-            }, 1000);
+            }
         });
     }
 
