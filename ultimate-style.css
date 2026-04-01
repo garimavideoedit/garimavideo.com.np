@@ -1364,6 +1364,35 @@ body {
 
 /* --- Photo Selection Mobile Optimization --- */
 @media (max-width: 768px) {
+    .nav-container {
+        padding: 0 15px !important; /* Less padding to give space to logo */
+        height: 70px !important;
+    }
+    .nav-logo {
+        font-size: 1.15rem !important; /* Slightly smaller to fit on one line */
+        white-space: nowrap !important;
+    }
+    .nav-logo i {
+        font-size: 1.4rem !important;
+        margin-right: 6px !important;
+    }
+    .section-header h2 {
+        font-size: 1.8rem !important;
+        padding: 0 10px;
+    }
+    .section-header p {
+        font-size: 0.9rem !important;
+        padding: 0 20px;
+        line-height: 1.4 !important;
+        word-break: keep-all; /* Prevent unnatural breaks */
+    }
+    /* Explicitly hide the welcome box for selectors */
+    #guest-welcome {
+        display: none !important;
+    }
+    .selection-card {
+        padding: 20px !important; /* Less padding on mobile */
+    }
     .selection-grid {
         grid-template-columns: 1fr 1fr !important;
         gap: 12px !important;
@@ -1392,7 +1421,7 @@ body {
         margin: 0 !important;
         gap: 10px !important;
     }
-    .selected-status {
+    .selected-count-status {
         font-size: 0.95rem !important;
         line-height: 1.2 !important;
     }

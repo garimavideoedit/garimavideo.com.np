@@ -115,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
             showSelectionView(false);
             if (clientNameParam) {
                 clientName = clientNameParam;
-                updateClientHeader();
                 loadPhotos(folderIdParam);
             } else {
                 if (document.getElementById('guest-modal')) document.getElementById('guest-modal').style.display = 'flex';
@@ -125,18 +124,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function updateClientHeader() {
-        if (document.getElementById('display-client-name')) document.getElementById('display-client-name').textContent = clientName;
-        if (document.getElementById('guest-welcome')) document.getElementById('guest-welcome').style.display = 'block';
-    }
-
     // Modal Listener
     document.getElementById('btn-start-selection')?.addEventListener('click', () => {
         const nameInput = document.getElementById('guest-name-input');
         if (nameInput && nameInput.value.trim()) {
             clientName = nameInput.value.trim();
             document.getElementById('guest-modal').style.display = 'none';
-            updateClientHeader();
             const urlParams = new URLSearchParams(window.location.search);
             const folderIdParam = urlParams.get('folderId');
             if (folderIdParam) loadPhotos(folderIdParam);
