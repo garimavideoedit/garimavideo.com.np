@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let selectedPhotos = new Set(); 
     let currentFolderId = ''; 
-    let clientName = 'Guest';
+    let clientName = localStorage.getItem('photo_client_name') || 'Guest';
 
     // --- Modern Notification System Helpers ---
     
@@ -131,6 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nameInput = document.getElementById('guest-name-input');
         if (nameInput && nameInput.value.trim()) {
             clientName = nameInput.value.trim();
+            localStorage.setItem('photo_client_name', clientName);
             document.getElementById('guest-modal').style.display = 'none';
             const urlParams = new URLSearchParams(window.location.search);
             const folderIdParam = urlParams.get('folderId');
@@ -199,6 +200,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateSelectedCount();
 
         try {
+            // Update URL so refresh keeps the same view
+            const newUrl = `${window.location.origin}${window.location.pathname}?folderId=${folderId}`;
+            window.history.replaceState({ path: newUrl }, '', newUrl);
+
             const data = await callGAS({ action: 'fetch', folderId: folderId });
             if (data.error) throw new Error(data.error);
 
