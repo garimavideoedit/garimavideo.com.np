@@ -1,7 +1,7 @@
 // Photo Selection Logic - Google Drive Integration (Serverless JSONP via Google Apps Script)
 document.addEventListener('DOMContentLoaded', () => {
     // 🔗 FINAL JSONP GOOGLE APPS SCRIPT URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdSXKlaa5ZX09XAtG8f5uJ1i9YbIfuL0MTSKTjY1lQquufC499Te2SmmYgc32g5jd3JA/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwytwmZwtqkMbGibigclcFepqgFi3aPxlrnwXqcmPnQ5iNvRjaifXP2eb9OD1ukVNYn9A/exec";
     
     // UI Elements
     const authContainer = document.getElementById('selection-auth-container');
@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('submit-selection');
     const folderLinkInput = document.getElementById('folder-link-input');
     const loadFolderBtn = document.getElementById('btn-load-folder');
+    const tabGallery = document.getElementById('tab-gallery');
+    const tabSelection = document.getElementById('tab-selection');
 
     let selectedPhotos = new Set(); 
     let currentFolderId = ''; 
@@ -234,6 +236,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function loadSelection() {
+        if (!currentFolderId) return;
+        selectionGrid.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading Your Selection...</div>';
+        selectionFooter.style.display = 'none';
+
+        try {
+            const data = await callGAS({ 
+                action: 'fetchSelection', 
+                folderId: currentFolderId, 
+                customerName: clientName 
+            });
+            
+            if (data.error) throw new Error(data.error);
+
+            selectionGrid.innerHTML = '';
+            const selectedItems = data.photos || [];
+            
+            if (selectedItems.length > 0) {
+                selectedItems.forEach((photo, index) => {
+                    const photoDiv = document.createElement('div');
+                    photoDiv.className = 'selection-item selected-view-only';
+                    photoDiv.innerHTML = `
+                        <div class="preview-icon"><i class="fas fa-expand"></i></div>
+                        <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy">
+                        <div class="selection-overlay" style="opacity: 1; visibility: visible;"><i class="fas fa-check-circle"></i></div>
+                    `;
+                    photoDiv.querySelector('.preview-icon').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        // For selection view, we'll just show the image
+                        openLightboxForSelection(selectedItems, index);
+                    });
+                    selectionGrid.appendChild(photoDiv);
+                });
+                showToast(`Loaded ${selectedItems.length} selected photos.`);
+            } else {
+                selectionGrid.innerHTML = '<p style="color: white; text-align: center; width: 100%; padding: 40px; opacity: 0.6;">You haven\'t selected any photos yet.</p>';
+            }
+        } catch (err) {
+            selectionGrid.innerHTML = `<div style="color: #ff6b6b; padding: 20px; text-align: center; width: 100%;">Error: ${err.message}</div>`;
+        }
+    }
+
+    // Lightbox for selection view (simpler)
+    function openLightboxForSelection(photos, index) {
+        allPhotos = photos; // Temporarily swap gallery for selection
+        openLightbox(index);
+        // Hide the select button in lightbox when in "My Selection" mode
+        const selectBtn = document.getElementById('lightbox-select');
+        if (selectBtn) selectBtn.style.display = 'none';
+    }
+
     // Lightbox Logic
     const lightboxModal = document.getElementById('lightbox-modal');
     const lightboxImg = document.getElementById('lightbox-img');
@@ -348,6 +401,20 @@ document.addEventListener('DOMContentLoaded', () => {
             else showToast('Invalid folder link!', 'error');
         });
     }
+
+    // Tab Listeners
+    tabGallery?.addEventListener('click', () => {
+        tabGallery.classList.add('active');
+        tabSelection.classList.remove('active');
+        document.getElementById('lightbox-select').style.display = 'flex';
+        loadPhotos(currentFolderId);
+    });
+
+    tabSelection?.addEventListener('click', () => {
+        tabSelection.classList.add('active');
+        tabGallery.classList.remove('active');
+        loadSelection();
+    });
 
     initSelection();
 });

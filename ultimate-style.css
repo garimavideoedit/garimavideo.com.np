@@ -1612,3 +1612,66 @@ body {
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* --- Selection Tabs UI --- */
+.selection-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    padding: 0 10px;
+}
+
+.tab-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+    padding: 12px 24px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.tab-btn i {
+    font-size: 1.1rem;
+    opacity: 0.7;
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #FF3D00, #FF6E40);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 8px 25px rgba(255, 61, 0, 0.3);
+}
+
+.tab-btn.active i {
+    opacity: 1;
+}
+
+.tab-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .selection-tabs {
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    .tab-btn {
+        padding: 10px 15px;
+        font-size: 0.85rem;
+        flex: 1;
+        justify-content: center;
+        border-radius: 12px;
+    }
+    .tab-btn i {
+        font-size: 0.95rem;
+    }
+}
