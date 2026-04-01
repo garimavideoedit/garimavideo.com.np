@@ -1,7 +1,7 @@
 // Photo Selection Logic - Google Drive Integration (Serverless JSONP via Google Apps Script)
 document.addEventListener('DOMContentLoaded', () => {
     // 🔗 FINAL JSONP GOOGLE APPS SCRIPT URL
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz8Pj0HSfTtZRffDEVfXmQC53g5FeFJg8uuyO1_jejYzKRzWDSAs38WJgw8qM0Blr3tfw/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw8Avtaq59zC44kDPLW2EDxKoLm4Y3zgKkF6G4eQj3U_qR3EYfCxETSvFBp245yNWPnmg/exec";
     
     // UI Elements
     const authContainer = document.getElementById('selection-auth-container');
@@ -316,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const successCount = res.count || selectedPhotos.size;
                     const waMessage = encodeURIComponent(`नमस्ते! मेरो फोटो सेलेक्सन पूर्ण भयो।\nनाम: ${clientName}\nजम्मा फोटो: ${successCount}\nकृपया चेक गर्नुहोला।`);
                     
-                    showToast(`Selection Complete! ${successCount} photos saved.`, 'success');
+                    showToast(`Selection Complete! ${successCount} photos moved to selection folder.`, 'success');
                     
                     setTimeout(() => {
                         window.open(`https://wa.me/9779852688256?text=${waMessage}`, '_blank');
