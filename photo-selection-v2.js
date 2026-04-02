@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const authContainer = document.getElementById('selection-auth-container');
     const studioDashboard = document.getElementById('studio-dashboard');
     const mainContainer = document.getElementById('selection-main-container');
+    const contentContainer = document.getElementById('selection-content-container');
     const selectionGrid = document.getElementById('selection-grid');
     const selectionFooter = document.getElementById('selection-footer');
     const selectedCount = document.getElementById('selected-count');
@@ -175,6 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showSelectionView(isAdmin = false) {
         if (authContainer) authContainer.style.display = 'none';
         if (mainContainer) mainContainer.style.display = 'block';
+        if (contentContainer) contentContainer.style.display = 'block';
         if (isAdmin) {
             document.getElementById('admin-tools').style.display = 'block';
             document.getElementById('admin-input-container').style.display = 'flex';
@@ -194,6 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadPhotos(folderId) {
         if (!folderId) return;
         currentFolderId = folderId;
+        if (contentContainer) contentContainer.style.display = 'block';
         selectionGrid.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading Photos from Google Drive...</div>';
         selectionFooter.style.display = 'none';
         selectedPhotos.clear();
