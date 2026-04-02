@@ -19,7 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let selectedPhotos = new Set(); 
     let currentFolderId = ''; 
-    let photoCache = {}; // 🚀 Optimization: Cache for faster loading
+    let photoCache = {}; // 🚀 Optimization: Cache for faster loading (Gallery)
+    let selectedCache = {}; // 🚀 Optimization: Cache for faster loading (My Selection)
     let clientName = localStorage.getItem('photo_client_name') || 'Guest';
 
     // --- Modern Notification System Helpers ---
@@ -294,6 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (res.success) {
                             showToast(isSelecting ? 'Photo saved.' : 'Photo removed.');
+                            // Invalidate selection cache so it re-fetches next time tab is clicked
+                            delete selectedCache[currentFolderId];
                         } else {
                             throw new Error(res.error || 'Server error.');
                         }
@@ -331,49 +334,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadSelection() {
         if (!currentFolderId) return;
-        selectionGrid.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading Your Selection...</div>';
-        selectionFooter.style.display = 'none';
+        
+        // 🚀 Caching: If we already have selection, show it instantly!
+        if (selectedCache[currentFolderId]) {
+            renderSelection(selectedCache[currentFolderId]);
+            // Still fetch in background for any changes, but silently
+            fetchSelectionBackground(currentFolderId);
+        } else {
+            selectionGrid.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading Your Selection...</div>';
+            selectionFooter.style.display = 'none';
+            await fetchSelectionBackground(currentFolderId);
+        }
+    }
 
+    async function fetchSelectionBackground(folderId) {
         try {
             const data = await callGAS({ 
                 action: 'fetchSelection', 
-                folderId: currentFolderId, 
+                folderId: folderId, 
                 customerName: clientName 
             });
             
             if (data.error) throw new Error(data.error);
 
-            selectionGrid.innerHTML = '';
-            const selectedItems = data.photos || [];
-            
-            if (selectedItems.length > 0) {
-                selectedItems.forEach((photo, index) => {
-                    const photoDiv = document.createElement('div');
-                    photoDiv.className = 'selection-item selected-view-only';
-                    photoDiv.innerHTML = `
-                        <div class="quick-remove" title="Remove from Selection"><i class="fas fa-trash-alt"></i></div>
-                        <div class="preview-icon"><i class="fas fa-expand"></i></div>
-                        <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy">
-                    `;
-                    
-                    // Entire Card Click for Preview (except remove button)
-                    photoDiv.addEventListener('click', (e) => {
-                        if (e.target.closest('.quick-remove')) {
-                            e.stopPropagation();
-                            confirmAndRemove(photo);
-                            return;
-                        }
-                        openLightboxForSelection(selectedItems, index);
-                    });
-
-                    selectionGrid.appendChild(photoDiv);
-                });
-                showToast(`Loaded ${selectedItems.length} selected photos.`);
-            } else {
-                selectionGrid.innerHTML = '<p style="color: white; text-align: center; width: 100%; padding: 40px; opacity: 0.6;">You haven\'t selected any photos yet.</p>';
-            }
+            selectedCache[folderId] = data.photos || [];
+            renderSelection(selectedCache[folderId]);
         } catch (err) {
-            selectionGrid.innerHTML = `<div style="color: #ff6b6b; padding: 20px; text-align: center; width: 100%;">Error: ${err.message}</div>`;
+            console.error(err);
+            if (!selectedCache[folderId]) {
+                selectionGrid.innerHTML = `<div style="color: #ff6b6b; padding: 20px; text-align: center; width: 100%;">Error: ${err.message}</div>`;
+            } else {
+                showToast(`Update Error: ${err.message}`, 'error');
+            }
+        }
+    }
+
+    function renderSelection(selectedItems) {
+        selectionGrid.innerHTML = '';
+        if (selectedItems.length > 0) {
+            selectedItems.forEach((photo, index) => {
+                const photoDiv = document.createElement('div');
+                photoDiv.className = 'selection-item selected-view-only';
+                photoDiv.innerHTML = `
+                    <div class="quick-remove" title="Remove from Selection"><i class="fas fa-trash-alt"></i></div>
+                    <div class="preview-icon"><i class="fas fa-expand"></i></div>
+                    <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy">
+                `;
+                
+                // Entire Card Click for Preview (except remove button)
+                photoDiv.addEventListener('click', (e) => {
+                    if (e.target.closest('.quick-remove')) {
+                        e.stopPropagation();
+                        confirmAndRemove(photo);
+                        return;
+                    }
+                    openLightboxForSelection(selectedItems, index);
+                });
+
+                selectionGrid.appendChild(photoDiv);
+            });
+            // Optional: Update selectedPhotos Set with IDs from the server to keep states in sync
+            // selectedItems.forEach(p => selectedPhotos.add(p.id));
+            // updateSelectedCount();
+        } else {
+            selectionGrid.innerHTML = '<p style="color: white; text-align: center; width: 100%; padding: 40px; opacity: 0.6;">You haven\'t selected any photos yet.</p>';
         }
     }
 
@@ -391,6 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (res.success) {
                 showToast('Photo removed from selection.');
+                delete selectedCache[currentFolderId]; // Clear cache
                 loadSelection(); // Refresh list
             } else {
                 throw new Error(res.error || 'Failed to remove photo.');
@@ -625,6 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showToast('Photo removed from selection.');
                 closeLightbox();
                 // Refresh selection view
+                delete selectedCache[currentFolderId];
                 loadSelection();
             } else {
                 throw new Error(res.error || 'Failed to remove photo.');
@@ -671,6 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const waMessage = encodeURIComponent(`नमस्ते! मेरो फोटो सेलेक्सन पूर्ण भयो।\nनाम: ${clientName}\nजम्मा फोटो: ${successCount}\nकृपया चेक गर्नुहोला।`);
                     
                     showToast(`Selection Complete! ${successCount} photos moved to selection folder.`, 'success');
+                    delete selectedCache[currentFolderId];
                     
                     setTimeout(() => {
                         window.open(`https://wa.me/9779852688256?text=${waMessage}`, '_blank');
