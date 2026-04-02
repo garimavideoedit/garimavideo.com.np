@@ -296,16 +296,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy">
                     `;
                     
-                    // Quick Remove Listener
-                    photoDiv.querySelector('.quick-remove').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        confirmAndRemove(photo);
-                    });
-
-                    photoDiv.querySelector('.preview-icon').addEventListener('click', (e) => {
-                        e.stopPropagation();
+                    // Entire Card Click for Preview (except remove button)
+                    photoDiv.addEventListener('click', (e) => {
+                        if (e.target.closest('.quick-remove')) {
+                            e.stopPropagation();
+                            confirmAndRemove(photo);
+                            return;
+                        }
                         openLightboxForSelection(selectedItems, index);
                     });
+
                     selectionGrid.appendChild(photoDiv);
                 });
                 showToast(`Loaded ${selectedItems.length} selected photos.`);
