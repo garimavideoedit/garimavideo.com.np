@@ -294,7 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="quick-remove" title="Remove from Selection"><i class="fas fa-trash-alt"></i></div>
                         <div class="preview-icon"><i class="fas fa-expand"></i></div>
                         <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy">
-                        <div class="selection-overlay" style="opacity: 1; visibility: visible;"><i class="fas fa-check-circle"></i></div>
                     `;
                     
                     // Quick Remove Listener
