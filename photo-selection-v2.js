@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let selectedPhotos = new Set(); 
     let currentFolderId = ''; 
+    let photoCache = {}; // 🚀 Optimization: Cache for faster loading
     let clientName = localStorage.getItem('photo_client_name') || 'Guest';
 
     // --- Modern Notification System Helpers ---
@@ -197,11 +198,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!folderId) return;
         currentFolderId = folderId;
         if (contentContainer) contentContainer.style.display = 'block';
-        selectionGrid.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading Photos from Google Drive...</div>';
-        selectionFooter.style.display = 'none';
-        selectedPhotos.clear();
-        updateSelectedCount();
+        
+        // 🚀 Caching: If we already have photos, show them instantly!
+        if (photoCache[folderId]) {
+            renderPhotos(photoCache[folderId]);
+            // Still fetch in background for any changes, but silently
+            fetchPhotosBackground(folderId);
+        } else {
+            selectionGrid.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner fa-spin"></i> Loading Photos from Google Drive...</div>';
+            selectionFooter.style.display = 'none';
+            selectedPhotos.clear();
+            updateSelectedCount();
+            await fetchPhotosBackground(folderId);
+        }
+    }
 
+    async function fetchPhotosBackground(folderId) {
         try {
             // Update URL so refresh keeps the same view
             const newUrl = `${window.location.origin}${window.location.pathname}?folderId=${folderId}`;
@@ -210,37 +222,50 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await callGAS({ action: 'fetch', folderId: folderId });
             if (data.error) throw new Error(data.error);
 
-            selectionGrid.innerHTML = '';
-            allPhotos = data.photos || []; 
-            
-            if (allPhotos.length > 0) {
-                allPhotos.forEach((photo, index) => {
-                    const photoDiv = document.createElement('div');
-                    photoDiv.className = 'selection-item';
-                    photoDiv.innerHTML = `
-                        <div class="preview-icon"><i class="fas fa-expand"></i></div>
-                        <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3342/3342137.png'">
-                        <div class="selection-overlay"><i class="fas fa-check-circle"></i></div>
-                    `;
-                    photoDiv.addEventListener('click', (e) => {
-                        if (e.target.closest('.preview-icon')) return;
-                        photoDiv.classList.toggle('selected');
-                        if (photoDiv.classList.contains('selected')) selectedPhotos.add(photo.id);
-                        else selectedPhotos.delete(photo.id);
-                        updateSelectedCount();
-                    });
-                    photoDiv.querySelector('.preview-icon').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        openLightbox(index);
-                    });
-                    selectionGrid.appendChild(photoDiv);
-                });
-                selectionFooter.style.display = 'flex';
-            } else {
-                selectionGrid.innerHTML = '<p style="color: white; text-align: center; width: 100%;">No photos found in this folder.</p>';
-            }
+            photoCache[folderId] = data.photos || [];
+            renderPhotos(photoCache[folderId]);
         } catch (err) {
-            selectionGrid.innerHTML = `<div style="color: #ff6b6b; padding: 20px; text-align: center; width: 100%;">Error: ${err.message}</div>`;
+            console.error(err);
+            if (!photoCache[folderId]) {
+                selectionGrid.innerHTML = `<div style="color: #ff6b6b; padding: 20px; text-align: center; width: 100%;">Error: ${err.message}</div>`;
+            } else {
+                showToast(`Update Error: ${err.message}`, 'error');
+            }
+        }
+    }
+
+    function renderPhotos(photos) {
+        selectionGrid.innerHTML = '';
+        allPhotos = photos; 
+        
+        if (allPhotos.length > 0) {
+            allPhotos.forEach((photo, index) => {
+                const photoDiv = document.createElement('div');
+                photoDiv.className = 'selection-item';
+                // Check if already selected (maintain state across tab switches)
+                if (selectedPhotos.has(photo.id)) photoDiv.classList.add('selected');
+                
+                photoDiv.innerHTML = `
+                    <div class="preview-icon"><i class="fas fa-expand"></i></div>
+                    <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3342/3342137.png'">
+                    <div class="selection-overlay"><i class="fas fa-check-circle"></i></div>
+                `;
+                photoDiv.addEventListener('click', (e) => {
+                    if (e.target.closest('.preview-icon')) return;
+                    photoDiv.classList.toggle('selected');
+                    if (photoDiv.classList.contains('selected')) selectedPhotos.add(photo.id);
+                    else selectedPhotos.delete(photo.id);
+                    updateSelectedCount();
+                });
+                photoDiv.querySelector('.preview-icon').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openLightbox(index);
+                });
+                selectionGrid.appendChild(photoDiv);
+            });
+            selectionFooter.style.display = 'flex';
+        } else {
+            selectionGrid.innerHTML = '<p style="color: white; text-align: center; width: 100%;">No photos found in this folder.</p>';
         }
     }
 
