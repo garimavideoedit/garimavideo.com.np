@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let folderIdToShare = currentFolderId;
         if (!folderIdToShare && folderLinkInput) {
             const url = folderLinkInput.value.trim();
-            const folderIdMatch = url.match(/\/folders\/([a-zA-Z0-9-_]+)/);
+            const folderIdMatch = url.match(/\/folders\/([a-zA-Z0-9-_]+)/) || url.match(/id=([a-zA-Z0-9-_]+)/);
             folderIdToShare = folderIdMatch ? folderIdMatch[1] : (url.length > 20 ? url : null);
         }
         if (!folderIdToShare) {
@@ -403,10 +403,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loadFolderBtn && folderLinkInput) {
         loadFolderBtn.addEventListener('click', () => {
             const url = folderLinkInput.value.trim();
-            const folderIdMatch = url.match(/\/folders\/([a-zA-Z0-9-_]+)/);
+            const folderIdMatch = url.match(/\/folders\/([a-zA-Z0-9-_]+)/) || url.match(/id=([a-zA-Z0-9-_]+)/);
             const folderId = folderIdMatch ? folderIdMatch[1] : (url.length > 20 ? url : null);
-            if (folderId) loadPhotos(folderId);
-            else showToast('Invalid folder link!', 'error');
+            if (folderId) {
+                console.log("Loading folder ID:", folderId);
+                loadPhotos(folderId);
+            } else {
+                showToast('Invalid folder link!', 'error');
+            }
         });
     }
 
