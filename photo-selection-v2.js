@@ -295,8 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (res.success) {
                             showToast(isSelecting ? 'Photo saved.' : 'Photo removed.');
-                            // Invalidate selection cache so it re-fetches next time tab is clicked
-                            delete selectedCache[currentFolderId];
+                            // We don't delete selectedCache here anymore, so it can be used for instant tab switching.
+                            // fetchSelectionBackground will refresh it silently in the background.
                         } else {
                             throw new Error(res.error || 'Server error.');
                         }
@@ -391,11 +391,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     openLightboxForSelection(selectedItems, index);
                 });
 
-                selectionGrid.appendChild(photoDiv);
+            selectionGrid.appendChild(photoDiv);
             });
-            // Optional: Update selectedPhotos Set with IDs from the server to keep states in sync
-            // selectedItems.forEach(p => selectedPhotos.add(p.id));
-            // updateSelectedCount();
+            // Update selectedPhotos Set with IDs from the server to keep states in sync across Gallery/Selection
+            selectedItems.forEach(p => selectedPhotos.add(p.id));
+            updateSelectedCount();
         } else {
             selectionGrid.innerHTML = '<p style="color: white; text-align: center; width: 100%; padding: 40px; opacity: 0.6;">You haven\'t selected any photos yet.</p>';
         }
@@ -415,7 +415,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (res.success) {
                 showToast('Photo removed from selection.');
-                delete selectedCache[currentFolderId]; // Clear cache
+                // Optimistically remove from local state but keep current cache for instant UI
+                if (selectedCache[currentFolderId]) {
+                    selectedCache[currentFolderId] = selectedCache[currentFolderId].filter(p => p.id !== photo.id);
+                }
                 loadSelection(); // Refresh list
             } else {
                 throw new Error(res.error || 'Failed to remove photo.');
@@ -649,8 +652,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (res.success) {
                 showToast('Photo removed from selection.');
                 closeLightbox();
-                // Refresh selection view
-                delete selectedCache[currentFolderId];
+                // Refresh selection view logic
+                if (selectedCache[currentFolderId]) {
+                    selectedCache[currentFolderId] = selectedCache[currentFolderId].filter(p => p.id !== photo.id);
+                }
                 loadSelection();
             } else {
                 throw new Error(res.error || 'Failed to remove photo.');
@@ -697,6 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const waMessage = encodeURIComponent(`नमस्ते! मेरो फोटो सेलेक्सन पूर्ण भयो।\nनाम: ${clientName}\nजम्मा फोटो: ${successCount}\nकृपया चेक गर्नुहोला।`);
                     
                     showToast(`Selection Complete! ${successCount} photos moved to selection folder.`, 'success');
+                    // Reset cache after final confirm
                     delete selectedCache[currentFolderId];
                     
                     setTimeout(() => {
