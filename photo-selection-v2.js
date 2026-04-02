@@ -291,13 +291,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     const photoDiv = document.createElement('div');
                     photoDiv.className = 'selection-item selected-view-only';
                     photoDiv.innerHTML = `
+                        <div class="quick-remove" title="Remove from Selection"><i class="fas fa-trash-alt"></i></div>
                         <div class="preview-icon"><i class="fas fa-expand"></i></div>
                         <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy">
                         <div class="selection-overlay" style="opacity: 1; visibility: visible;"><i class="fas fa-check-circle"></i></div>
                     `;
+                    
+                    // Quick Remove Listener
+                    photoDiv.querySelector('.quick-remove').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        confirmAndRemove(photo);
+                    });
+
                     photoDiv.querySelector('.preview-icon').addEventListener('click', (e) => {
                         e.stopPropagation();
-                        // For selection view, we'll just show the image
                         openLightboxForSelection(selectedItems, index);
                     });
                     selectionGrid.appendChild(photoDiv);
@@ -308,6 +315,29 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             selectionGrid.innerHTML = `<div style="color: #ff6b6b; padding: 20px; text-align: center; width: 100%;">Error: ${err.message}</div>`;
+        }
+    }
+
+    async function confirmAndRemove(photo) {
+        const confirmed = await showConfirm('Remove Photo?', `तपाईं यो फोटोलाई सेलेक्सनबाट हटाउन चाहनुहुन्छ? यो फेरि 'Gallery' मा जानेछ।`);
+        if (!confirmed) return;
+
+        try {
+            const res = await callGAS({
+                action: 'removeSelection',
+                fileId: photo.id,
+                parentFolderId: currentFolderId,
+                customerName: clientName
+            });
+
+            if (res.success) {
+                showToast('Photo removed from selection.');
+                loadSelection(); // Refresh list
+            } else {
+                throw new Error(res.error || 'Failed to remove photo.');
+            }
+        } catch (err) {
+            showToast(`Error: ${err.message}`, 'error');
         }
     }
 
