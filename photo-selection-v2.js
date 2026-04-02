@@ -236,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderPhotos(photos) {
+        if (!tabGallery || !tabGallery.classList.contains('active')) return;
         selectionGrid.innerHTML = '';
         allPhotos = photos; 
         
@@ -370,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderSelection(selectedItems) {
+        if (!tabSelection || !tabSelection.classList.contains('active')) return;
         selectionGrid.innerHTML = '';
         if (selectedItems.length > 0) {
             selectedItems.forEach((photo, index) => {
