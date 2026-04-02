@@ -334,8 +334,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (res.success) {
                             showToast(isSelecting ? 'Photo saved.' : 'Photo removed.');
-                            // We don't delete selectedCache here anymore, so it can be used for instant tab switching.
-                            // fetchSelectionBackground will refresh it silently in the background.
+                            // Clear cache to force a fresh fetch in the selection tab
+                            delete selectedCache[currentFolderId];
+                            saveLocalCache();
                         } else {
                             throw new Error(res.error || 'Server error.');
                         }
@@ -390,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const data = await callGAS({ 
                 action: 'fetchSelection', 
-                folderId: folderId, 
+                parentFolderId: folderId, 
                 customerName: clientName 
             });
             
@@ -648,6 +649,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (res.success) {
                 showToast(isSelecting ? 'Photo saved.' : 'Photo removed.');
+                // Clear cache to force a fresh fetch in the selection tab
+                delete selectedCache[currentFolderId];
+                saveLocalCache();
             } else {
                 throw new Error(res.error || 'Server error.');
             }
