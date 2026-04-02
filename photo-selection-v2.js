@@ -253,20 +253,54 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="selection-overlay"></div>
                 `;
 
-                // Handle Selection (Small Badge Click)
-                photoDiv.querySelector('.selection-badge').addEventListener('click', (e) => {
+                // Handle Selection (Heart Badge Click) - AUTO-SAVE ENABLED
+                photoDiv.querySelector('.selection-badge').addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const badge = e.currentTarget;
-                    if (selectedPhotos.has(photo.id)) {
-                        selectedPhotos.delete(photo.id);
-                        photoDiv.classList.remove('selected');
-                        badge.classList.remove('selected');
-                    } else {
-                        selectedPhotos.add(photo.id);
-                        photoDiv.classList.add('selected');
-                        badge.classList.add('selected');
+                    if (badge.classList.contains('saving')) return; // Prevent spamming
+
+                    const isSelecting = !selectedPhotos.has(photo.id);
+                    badge.classList.add('saving');
+
+                    try {
+                        let res;
+                        if (isSelecting) {
+                            res = await callGAS({
+                                action: 'batchAddSelection',
+                                fileIds: photo.id,
+                                parentFolderId: currentFolderId,
+                                customerName: clientName
+                            });
+                        } else {
+                            res = await callGAS({
+                                action: 'removeSelection',
+                                fileId: photo.id,
+                                parentFolderId: currentFolderId,
+                                customerName: clientName
+                            });
+                        }
+
+                        if (res.success) {
+                            if (isSelecting) {
+                                selectedPhotos.add(photo.id);
+                                photoDiv.classList.add('selected');
+                                badge.classList.add('selected');
+                                showToast('Photo saved to selection.');
+                            } else {
+                                selectedPhotos.delete(photo.id);
+                                photoDiv.classList.remove('selected');
+                                badge.classList.remove('selected');
+                                showToast('Photo removed from selection.');
+                            }
+                            updateSelectedCount();
+                        } else {
+                            throw new Error(res.error || 'Server error.');
+                        }
+                    } catch (err) {
+                        showToast(`Update failed: ${err.message}`, 'error');
+                    } finally {
+                        badge.classList.remove('saving');
                     }
-                    updateSelectedCount();
                 });
 
                 // Handle Preview (Whole Card Click)
@@ -483,23 +517,61 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('lightbox-prev')?.addEventListener('click', () => openLightbox(currentPhotoIndex - 1));
     document.getElementById('lightbox-next')?.addEventListener('click', () => openLightbox(currentPhotoIndex + 1));
     
-    document.getElementById('lightbox-select')?.addEventListener('click', () => {
+    document.getElementById('lightbox-select')?.addEventListener('click', async () => {
         const photo = allPhotos[currentPhotoIndex];
         const gridItems = selectionGrid.querySelectorAll('.selection-item');
         const gridItem = gridItems[currentPhotoIndex];
         const badge = gridItem?.querySelector('.selection-badge');
+        const selectBtn = document.getElementById('lightbox-select');
         
-        if (selectedPhotos.has(photo.id)) {
-            selectedPhotos.delete(photo.id);
-            gridItem?.classList.remove('selected');
-            badge?.classList.remove('selected');
-        } else {
-            selectedPhotos.add(photo.id);
-            gridItem?.classList.add('selected');
-            badge?.classList.add('selected');
+        if (selectBtn.disabled) return;
+
+        const isSelecting = !selectedPhotos.has(photo.id);
+        const originalHTML = selectBtn.innerHTML;
+        selectBtn.disabled = true;
+        selectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+        try {
+            let res;
+            if (isSelecting) {
+                res = await callGAS({
+                    action: 'batchAddSelection',
+                    fileIds: photo.id,
+                    parentFolderId: currentFolderId,
+                    customerName: clientName
+                });
+            } else {
+                res = await callGAS({
+                    action: 'removeSelection',
+                    fileId: photo.id,
+                    parentFolderId: currentFolderId,
+                    customerName: clientName
+                });
+            }
+
+            if (res.success) {
+                if (isSelecting) {
+                    selectedPhotos.add(photo.id);
+                    gridItem?.classList.add('selected');
+                    badge?.classList.add('selected');
+                    showToast('Photo saved to selection.');
+                } else {
+                    selectedPhotos.delete(photo.id);
+                    gridItem?.classList.remove('selected');
+                    badge?.classList.remove('selected');
+                    showToast('Photo removed from selection.');
+                }
+                updateSelectedCount();
+                updateLightboxSelectBtn();
+            } else {
+                throw new Error(res.error || 'Server error.');
+            }
+        } catch (err) {
+            showToast(`Error: ${err.message}`, 'error');
+        } finally {
+            selectBtn.disabled = false;
+            selectBtn.innerHTML = originalHTML;
         }
-        updateSelectedCount();
-        updateLightboxSelectBtn();
     });
 
     // --- REMOVE FROM SELECTION LOGIC ---
