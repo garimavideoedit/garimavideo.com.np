@@ -389,17 +389,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchSelectionBackground(folderId) {
         try {
+            const cleanName = (clientName || "Default").trim();
             const data = await callGAS({ 
                 action: 'fetchSelection', 
                 parentFolderId: folderId, 
-                customerName: clientName 
+                customerName: cleanName 
             });
             
             if (data.error) throw new Error(data.error);
 
-            selectedCache[folderId] = data.photos || [];
+            const fetchedPhotos = data.photos || [];
+            selectedCache[folderId] = fetchedPhotos;
             saveLocalCache(); // 🚀 Persist to LocalStorage
-            renderSelection(selectedCache[folderId]);
+            
+            if (fetchedPhotos.length > 0) {
+                showToast(`Found ${fetchedPhotos.length} selected photos.`);
+            }
+            renderSelection(fetchedPhotos);
         } catch (err) {
             console.error(err);
             if (!selectedCache[folderId]) {
