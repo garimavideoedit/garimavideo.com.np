@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFolderId = ''; 
     let photoCache = {}; // 🚀 Optimization: Cache for faster loading (Gallery)
     let selectedCache = {}; // 🚀 Optimization: Cache for faster loading (My Selection)
-    let clientName = localStorage.getItem('photo_client_name') || 'Guest';
+    let clientName = localStorage.getItem('photo_client_name') || '';
 
     // --- Modern Notification System Helpers ---
     
@@ -116,11 +116,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const folderIdParam = urlParams.get('folderId');
         const clientNameParam = urlParams.get('client');
 
+        // Priority 1: URL Parameter
+        if (clientNameParam) {
+            clientName = clientNameParam;
+            localStorage.setItem('photo_client_name', clientName);
+        }
+
         if (folderIdParam) {
+            currentFolderId = folderIdParam;
             showSelectionView(false);
-            if (clientNameParam) {
-                clientName = clientNameParam;
-                loadPhotos(folderIdParam);
+            
+            // Check if we already have a valid client name from URL or LocalStorage
+            if (clientName && clientName.trim() !== '' && clientName !== 'Guest') {
+                const lastTab = localStorage.getItem('photo_active_tab') || 'gallery';
+                if (lastTab === 'selection') {
+                    // Force a slight delay to ensure UI is ready
+                    setTimeout(() => tabSelection?.click(), 100);
+                } else {
+                    setTimeout(() => tabGallery?.click(), 100);
+                }
             } else {
                 if (document.getElementById('guest-modal')) document.getElementById('guest-modal').style.display = 'flex';
             }
@@ -746,6 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tabGallery?.addEventListener('click', () => {
         tabGallery.classList.add('active');
         tabSelection.classList.remove('active');
+        localStorage.setItem('photo_active_tab', 'gallery');
         document.getElementById('lightbox-select').style.display = 'flex';
         loadPhotos(currentFolderId);
     });
@@ -753,6 +768,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tabSelection?.addEventListener('click', () => {
         tabSelection.classList.add('active');
         tabGallery.classList.remove('active');
+        localStorage.setItem('photo_active_tab', 'selection');
         loadSelection();
     });
 
