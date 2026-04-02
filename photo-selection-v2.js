@@ -253,14 +253,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="selection-overlay"></div>
                 `;
 
-                // Handle Selection (Heart Badge Click) - AUTO-SAVE ENABLED
+                // Handle Selection (Heart Badge Click) - OPTIMISTIC UI
                 photoDiv.querySelector('.selection-badge').addEventListener('click', async (e) => {
                     e.stopPropagation();
                     const badge = e.currentTarget;
                     if (badge.classList.contains('saving')) return; // Prevent spamming
 
                     const isSelecting = !selectedPhotos.has(photo.id);
+                    
+                    // --- OPTIMISTIC UI UPDATE ---
                     badge.classList.add('saving');
+                    if (isSelecting) {
+                        selectedPhotos.add(photo.id);
+                        photoDiv.classList.add('selected');
+                        badge.classList.add('selected');
+                    } else {
+                        selectedPhotos.delete(photo.id);
+                        photoDiv.classList.remove('selected');
+                        badge.classList.remove('selected');
+                    }
+                    updateSelectedCount();
 
                     try {
                         let res;
@@ -281,23 +293,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
 
                         if (res.success) {
-                            if (isSelecting) {
-                                selectedPhotos.add(photo.id);
-                                photoDiv.classList.add('selected');
-                                badge.classList.add('selected');
-                                showToast('Photo saved to selection.');
-                            } else {
-                                selectedPhotos.delete(photo.id);
-                                photoDiv.classList.remove('selected');
-                                badge.classList.remove('selected');
-                                showToast('Photo removed from selection.');
-                            }
-                            updateSelectedCount();
+                            showToast(isSelecting ? 'Photo saved.' : 'Photo removed.');
                         } else {
                             throw new Error(res.error || 'Server error.');
                         }
                     } catch (err) {
-                        showToast(`Update failed: ${err.message}`, 'error');
+                        // --- REVERT ON FAILURE ---
+                        if (isSelecting) {
+                            selectedPhotos.delete(photo.id);
+                            photoDiv.classList.remove('selected');
+                            badge.classList.remove('selected');
+                        } else {
+                            selectedPhotos.add(photo.id);
+                            photoDiv.classList.add('selected');
+                            badge.classList.add('selected');
+                        }
+                        updateSelectedCount();
+                        showToast(`Failed: ${err.message}`, 'error');
                     } finally {
                         badge.classList.remove('saving');
                     }
@@ -528,6 +540,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isSelecting = !selectedPhotos.has(photo.id);
         const originalHTML = selectBtn.innerHTML;
+        
+        // --- OPTIMISTIC UI UPDATE ---
+        if (isSelecting) {
+            selectedPhotos.add(photo.id);
+            gridItem?.classList.add('selected');
+            badge?.classList.add('selected');
+        } else {
+            selectedPhotos.delete(photo.id);
+            gridItem?.classList.remove('selected');
+            badge?.classList.remove('selected');
+        }
+        updateSelectedCount();
+        updateLightboxSelectBtn();
+
+        // Start server update
         selectBtn.disabled = true;
         selectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
@@ -550,23 +577,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (res.success) {
-                if (isSelecting) {
-                    selectedPhotos.add(photo.id);
-                    gridItem?.classList.add('selected');
-                    badge?.classList.add('selected');
-                    showToast('Photo saved to selection.');
-                } else {
-                    selectedPhotos.delete(photo.id);
-                    gridItem?.classList.remove('selected');
-                    badge?.classList.remove('selected');
-                    showToast('Photo removed from selection.');
-                }
-                updateSelectedCount();
-                updateLightboxSelectBtn();
+                showToast(isSelecting ? 'Photo saved.' : 'Photo removed.');
             } else {
                 throw new Error(res.error || 'Server error.');
             }
         } catch (err) {
+            // --- REVERT ON FAILURE ---
+            if (isSelecting) {
+                selectedPhotos.delete(photo.id);
+                gridItem?.classList.remove('selected');
+                badge?.classList.remove('selected');
+            } else {
+                selectedPhotos.add(photo.id);
+                gridItem?.classList.add('selected');
+                badge?.classList.add('selected');
+            }
+            updateSelectedCount();
+            updateLightboxSelectBtn();
             showToast(`Error: ${err.message}`, 'error');
         } finally {
             selectBtn.disabled = false;
