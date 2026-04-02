@@ -19,8 +19,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let selectedPhotos = new Set(); 
     let currentFolderId = ''; 
-    let photoCache = {}; // 🚀 Optimization: Cache for faster loading (Gallery)
-    let selectedCache = {}; // 🚀 Optimization: Cache for faster loading (My Selection)
+    let photoCache = {}; 
+    let selectedCache = {}; 
+    
+    // --- Persistent Cache Helpers ---
+    function saveLocalCache() {
+        try {
+            localStorage.setItem('photo_gallery_cache', JSON.stringify(photoCache));
+            localStorage.setItem('photo_selection_cache', JSON.stringify(selectedCache));
+            localStorage.setItem('photo_cache_time', Date.now());
+        } catch (e) {
+            console.warn("Storage full, could not save cache.");
+        }
+    }
+
+    function loadLocalCache() {
+        const cacheTime = localStorage.getItem('photo_cache_time');
+        if (cacheTime && (Date.now() - cacheTime < 86400000)) { // 24h limit
+            try {
+                photoCache = JSON.parse(localStorage.getItem('photo_gallery_cache')) || {};
+                selectedCache = JSON.parse(localStorage.getItem('photo_selection_cache')) || {};
+            } catch (e) { console.error("Cache parse error"); }
+        }
+    }
+    loadLocalCache();
+
     let clientName = localStorage.getItem('photo_client_name') || '';
 
     // --- Modern Notification System Helpers ---
@@ -238,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.error) throw new Error(data.error);
 
             photoCache[folderId] = data.photos || [];
+            saveLocalCache(); // 🚀 Persist to LocalStorage
             renderPhotos(photoCache[folderId]);
         } catch (err) {
             console.error(err);
@@ -373,6 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.error) throw new Error(data.error);
 
             selectedCache[folderId] = data.photos || [];
+            saveLocalCache(); // 🚀 Persist to LocalStorage
             renderSelection(selectedCache[folderId]);
         } catch (err) {
             console.error(err);
@@ -434,6 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Optimistically remove from local state but keep current cache for instant UI
                 if (selectedCache[currentFolderId]) {
                     selectedCache[currentFolderId] = selectedCache[currentFolderId].filter(p => p.id !== photo.id);
+                    saveLocalCache();
                 }
                 loadSelection(); // Refresh list
             } else {
@@ -671,6 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Refresh selection view logic
                 if (selectedCache[currentFolderId]) {
                     selectedCache[currentFolderId] = selectedCache[currentFolderId].filter(p => p.id !== photo.id);
+                    saveLocalCache();
                 }
                 loadSelection();
             } else {
@@ -720,6 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showToast(`Selection Complete! ${successCount} photos moved to selection folder.`, 'success');
                     // Reset cache after final confirm
                     delete selectedCache[currentFolderId];
+                    saveLocalCache();
                     
                     setTimeout(() => {
                         window.open(`https://wa.me/9779852688256?text=${waMessage}`, '_blank');
