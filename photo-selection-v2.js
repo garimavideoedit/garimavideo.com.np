@@ -246,21 +246,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (selectedPhotos.has(photo.id)) photoDiv.classList.add('selected');
                 
                 photoDiv.innerHTML = `
-                    <div class="preview-icon"><i class="fas fa-expand"></i></div>
+                    <div class="selection-badge ${selectedPhotos.has(photo.id) ? 'selected' : ''}" title="Select / फोटो रोज्नुहोस्">
+                        <i class="fas fa-check"></i>
+                    </div>
                     <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3342/3342137.png'">
                     <div class="selection-overlay"><i class="fas fa-check-circle"></i></div>
                 `;
-                photoDiv.addEventListener('click', (e) => {
-                    if (e.target.closest('.preview-icon')) return;
-                    photoDiv.classList.toggle('selected');
-                    if (photoDiv.classList.contains('selected')) selectedPhotos.add(photo.id);
-                    else selectedPhotos.delete(photo.id);
+
+                // Handle Selection (Small Badge Click)
+                photoDiv.querySelector('.selection-badge').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const badge = e.currentTarget;
+                    if (selectedPhotos.has(photo.id)) {
+                        selectedPhotos.delete(photo.id);
+                        photoDiv.classList.remove('selected');
+                        badge.classList.remove('selected');
+                    } else {
+                        selectedPhotos.add(photo.id);
+                        photoDiv.classList.add('selected');
+                        badge.classList.add('selected');
+                    }
                     updateSelectedCount();
                 });
-                photoDiv.querySelector('.preview-icon').addEventListener('click', (e) => {
-                    e.stopPropagation();
+
+                // Handle Preview (Whole Card Click)
+                photoDiv.addEventListener('click', (e) => {
+                    if (e.target.closest('.selection-badge')) return;
                     openLightbox(index);
                 });
+
                 selectionGrid.appendChild(photoDiv);
             });
             selectionFooter.style.display = 'flex';
@@ -473,13 +487,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const photo = allPhotos[currentPhotoIndex];
         const gridItems = selectionGrid.querySelectorAll('.selection-item');
         const gridItem = gridItems[currentPhotoIndex];
+        const badge = gridItem?.querySelector('.selection-badge');
         
         if (selectedPhotos.has(photo.id)) {
             selectedPhotos.delete(photo.id);
             gridItem?.classList.remove('selected');
+            badge?.classList.remove('selected');
         } else {
             selectedPhotos.add(photo.id);
             gridItem?.classList.add('selected');
+            badge?.classList.add('selected');
         }
         updateSelectedCount();
         updateLightboxSelectBtn();

@@ -307,6 +307,46 @@
             transform: scale(1.15);
             background: #c0392b;
         }
+
+        /* --- Selection Badge for Gallery --- */
+        .selection-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            border: 2px solid #ddd;
+            transition: all 0.2s ease;
+        }
+        .selection-badge.selected {
+            background: #ff3d00;
+            color: white;
+            border-color: #ff3d00;
+        }
+        .selection-badge:hover {
+            transform: scale(1.1);
+        }
+        
+        .selection-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255, 61, 0, 0.15);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: all 0.3s ease;
+            z-index: 2;
+            pointer-events: none; /* Let clicks pass through to photo card */
+        }
+        .selection-item.selected .selection-overlay {
+            opacity: 1; visibility: visible;
+        }
         #guest-modal {
             display: none; /* Controlled by JS */
             flex-direction: column;
