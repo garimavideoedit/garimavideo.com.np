@@ -247,10 +247,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 photoDiv.innerHTML = `
                     <div class="selection-badge ${selectedPhotos.has(photo.id) ? 'selected' : ''}" title="Select / फोटो रोज्नुहोस्">
-                        <i class="fas fa-check"></i>
+                        <i class="fas fa-heart"></i>
                     </div>
                     <img src="${photo.thumbnail}" alt="${photo.name}" loading="lazy" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3342/3342137.png'">
-                    <div class="selection-overlay"><i class="fas fa-check-circle"></i></div>
+                    <div class="selection-overlay"></div>
                 `;
 
                 // Handle Selection (Small Badge Click)
