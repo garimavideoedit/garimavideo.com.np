@@ -290,27 +290,47 @@ document.addEventListener('DOMContentLoaded', () => {
     function openLightboxForSelection(photos, index) {
         allPhotos = photos; // Temporarily swap gallery for selection
         openLightbox(index);
-        // Hide the select button in lightbox when in "My Selection" mode
-        const selectBtn = document.getElementById('lightbox-select');
+        
+        // Mode: Selection Review
         if (selectBtn) selectBtn.style.display = 'none';
+        if (removeBtn) removeBtn.style.display = 'flex';
     }
 
     // Lightbox Logic
     const lightboxModal = document.getElementById('lightbox-modal');
     const lightboxImg = document.getElementById('lightbox-img');
     const lightboxCaption = document.getElementById('lightbox-caption');
+    const selectBtn = document.getElementById('lightbox-select');
+    const removeBtn = document.getElementById('lightbox-remove');
+    const zoomInBtn = document.getElementById('lightbox-zoom-in');
+    const zoomOutBtn = document.getElementById('lightbox-zoom-out');
+    
     let currentZoom = 1;
+    let isDragging = false;
+    let startX, startY, translateX = 0, translateY = 0;
 
     function openLightbox(index) {
         if (index < 0 || index >= allPhotos.length) return;
         currentPhotoIndex = index;
         const photo = allPhotos[index];
+        
+        // Reset Zoom & Pan
         currentZoom = 1;
+        translateX = 0;
+        translateY = 0;
+        
         if (lightboxImg) {
-            lightboxImg.style.transform = `scale(1)`;
+            lightboxImg.style.transform = `scale(1) translate(0,0)`;
             lightboxImg.src = photo.thumbnail.replace('=s400', '=s1600');
             lightboxCaption.textContent = photo.name;
         }
+        
+        // Mode Check: Default to Gallery Mode
+        if (removeBtn && removeBtn.style.display !== 'flex') {
+            if (selectBtn) selectBtn.style.display = 'flex';
+            if (removeBtn) removeBtn.style.display = 'none';
+        }
+
         lightboxModal.style.display = 'block';
         document.body.style.overflow = 'hidden';
         updateLightboxSelectBtn();
@@ -322,17 +342,84 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateLightboxSelectBtn() {
-        const selectBtn = document.getElementById('lightbox-select');
         const isSelected = selectedPhotos.has(allPhotos[currentPhotoIndex].id);
         if (selectBtn) selectBtn.classList.toggle('selected', isSelected);
     }
 
+    // Zoom Controls
+    zoomInBtn?.addEventListener('click', () => {
+        if (currentZoom < 3) {
+            currentZoom += 0.4;
+            updateLightboxTransform();
+        }
+    });
+
+    zoomOutBtn?.addEventListener('click', () => {
+        if (currentZoom > 1) {
+            currentZoom -= 0.4;
+            if (currentZoom < 1) {
+                currentZoom = 1;
+                translateX = 0;
+                translateY = 0;
+            }
+            updateLightboxTransform();
+        }
+    });
+
+    function updateLightboxTransform() {
+        if (lightboxImg) {
+            lightboxImg.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+            lightboxImg.style.cursor = currentZoom > 1 ? 'grab' : 'default';
+        }
+    }
+
+    // Panning/Dragging Logic
+    lightboxImg?.addEventListener('mousedown', (e) => {
+        if (currentZoom <= 1) return;
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        lightboxImg.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        updateLightboxTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+        isDragging = false;
+        if (lightboxImg) lightboxImg.style.cursor = currentZoom > 1 ? 'grab' : 'default';
+    });
+
+    // Touch support for mobile panning
+    lightboxImg?.addEventListener('touchstart', (e) => {
+        if (currentZoom <= 1) return;
+        isDragging = true;
+        startX = e.touches[0].clientX - translateX;
+        startY = e.touches[0].clientY - translateY;
+    });
+
+    lightboxImg?.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        translateX = e.touches[0].clientX - startX;
+        translateY = e.touches[0].clientY - startY;
+        updateLightboxTransform();
+    });
+
+    lightboxImg?.addEventListener('touchend', () => { isDragging = false; });
+
     document.querySelector('.lightbox-close')?.addEventListener('click', closeLightbox);
     document.getElementById('lightbox-prev')?.addEventListener('click', () => openLightbox(currentPhotoIndex - 1));
     document.getElementById('lightbox-next')?.addEventListener('click', () => openLightbox(currentPhotoIndex + 1));
+    
     document.getElementById('lightbox-select')?.addEventListener('click', () => {
         const photo = allPhotos[currentPhotoIndex];
-        const gridItem = selectionGrid.children[currentPhotoIndex];
+        const gridItems = selectionGrid.querySelectorAll('.selection-item');
+        const gridItem = gridItems[currentPhotoIndex];
+        
         if (selectedPhotos.has(photo.id)) {
             selectedPhotos.delete(photo.id);
             gridItem?.classList.remove('selected');
@@ -342,6 +429,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         updateSelectedCount();
         updateLightboxSelectBtn();
+    });
+
+    // --- REMOVE FROM SELECTION LOGIC ---
+    document.getElementById('lightbox-remove')?.addEventListener('click', async () => {
+        const photo = allPhotos[currentPhotoIndex];
+        
+        const confirmed = await showConfirm('Remove Photo?', `तपाईं यो फोटोलाई सेलेक्सनबाट हटाउन चाहनुहुन्छ? यो फेरि 'Gallery' मा जानेछ।`);
+        if (!confirmed) return;
+
+        const removeBtn = document.getElementById('lightbox-remove');
+        const originalHTML = removeBtn.innerHTML;
+        removeBtn.disabled = true;
+        removeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+        try {
+            const res = await callGAS({
+                action: 'removeSelection',
+                fileId: photo.id,
+                parentFolderId: currentFolderId,
+                customerName: clientName
+            });
+
+            if (res.success) {
+                showToast('Photo removed from selection.');
+                closeLightbox();
+                // Refresh selection view
+                loadSelection();
+            } else {
+                throw new Error(res.error || 'Failed to remove photo.');
+            }
+        } catch (err) {
+            showToast(`Error: ${err.message}`, 'error');
+        } finally {
+            removeBtn.disabled = false;
+            removeBtn.innerHTML = originalHTML;
+        }
     });
 
     function updateSelectedCount() {
